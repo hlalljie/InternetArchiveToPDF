@@ -11,7 +11,7 @@ const downloadImage = async (url) => {
   return response.data;
 };
 
-const createPdf = async (images) => {
+const createPdf = async (images, filename) => {
   const pdfDoc = await PDFDocument.create();
   for (let imgData of images) {
     const image = await sharp(imgData).jpeg().toBuffer();
@@ -25,22 +25,28 @@ const createPdf = async (images) => {
     });
   }
   const pdfBytes = await pdfDoc.save();
-  fs.writeFileSync("The_4-Hour_Work_Week.pdf", pdfBytes);
-  console.log("PDF saved as The_4-Hour_Work_Week.pdf");
+  fs.writeFileSync(`${filename}.pdf`, pdfBytes);
+  console.log(`PDF saved as ${filename}.pdf`);
 };
 
 const downloadAndCreatePdf = async (
   startPage,
+  endPage,
   maxConsecutiveFailures,
-  baseUrl
+  baseUrlPrefix,
+  urlSuffix,
+  filename
 ) => {
   const images = [];
   let consecutiveFailures = 0;
   let page = startPage;
 
-  while (consecutiveFailures < maxConsecutiveFailures) {
+  while (
+    consecutiveFailures < maxConsecutiveFailures &&
+    (endPage === -1 || page <= endPage)
+  ) {
     const pageStr = String(page).padStart(4, "0");
-    const url = `${baseUrl}${pageStr}.jp2&id=the-4-hour-work-week-by-timothy-ferriss&scale=4&rotate=0`;
+    const url = `${baseUrlPrefix}${pageStr}${urlSuffix}`;
     console.log(`Downloading from: ${url}`);
 
     try {
@@ -56,18 +62,32 @@ const downloadAndCreatePdf = async (
   }
 
   if (images.length > 0) {
-    await createPdf(images);
+    await createPdf(images, filename);
   } else {
     console.log("No images were downloaded.");
   }
 };
 
-// URL details
-const baseUrl =
-  "https://ia903406.us.archive.org/BookReader/BookReaderImages.php?zip=/28/items/the-4-hour-work-week-by-timothy-ferriss/The%204-Hour%20Work%20Week%20by%20Timothy%20Ferriss_jp2.zip&file=The%204-Hour%20Work%20Week%20by%20Timothy%20Ferriss_jp2/The%204-Hour%20Work%20Week%20by%20Timothy%20Ferriss_";
-
-// Example usage with assumed page range starting from 0
+// Parameters
 const startPage = 0;
+const endPage = 10; // Set to -1 to download all pages until consecutive failures occur
 const maxConsecutiveFailures = 10; // Stop after 10 consecutive failures
+// const baseUrlPrefix =
+//   "https://ia903406.us.archive.org/BookReader/BookReaderImages.php?zip=/28/items/the-4-hour-work-week-by-timothy-ferriss/The%204-Hour%20Work%20Week%20by%20Timothy%20Ferriss_jp2.zip&file=The%204-Hour%20Work%20Week%20by%20Timothy%20Ferriss_jp2/The%204-Hour%20Work%20Week%20by%20Timothy%20Ferriss_";
+// const urlSuffix =
+//   ".jp2&id=the-4-hour-work-week-by-timothy-ferriss&scale=4&rotate=0";
+const baseUrlPrefix =
+  "https://ia902905.us.archive.org/BookReader/BookReaderImages.php?zip=/12/items/zenandtheartofmotorcyclemaintenancerobertpirsigm._833_V/Zen%20and%20the%20Art%20of%20Motorcycle%20Maintenance%20Robert%20Pirsig%20M._jp2.zip&file=Zen%20and%20the%20Art%20of%20Motorcycle%20Maintenance%20Robert%20Pirsig%20M._jp2/Zen%20and%20the%20Art%20of%20Motorcycle%20Maintenance%20Robert%20Pirsig%20M._";
+const urlSuffix =
+  ".jp2&id=zenandtheartofmotorcyclemaintenancerobertpirsigm._833_V&scale=4&rotate=0";
+const filename = "Ten_Page_Test";
 
-downloadAndCreatePdf(startPage, maxConsecutiveFailures, baseUrl);
+// Run the function
+downloadAndCreatePdf(
+  startPage,
+  endPage,
+  maxConsecutiveFailures,
+  baseUrlPrefix,
+  urlSuffix,
+  filename
+);
