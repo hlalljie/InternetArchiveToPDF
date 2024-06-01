@@ -45,31 +45,52 @@ const downloadAndCreatePdf = async (
   maxConsecutiveFailures,
   url,
   filename,
-  scale
+  scale,
+  batchSize
 ) => {
   const { prefix, suffix } = splitUrl(url);
   const images = [];
   let consecutiveFailures = 0;
   let page = startPage;
 
-  while (
-    consecutiveFailures < maxConsecutiveFailures &&
-    (endPage === -1 || page <= endPage)
-  ) {
-    const pageStr = String(page).padStart(4, "0");
-    const fullUrl = `${prefix}${pageStr}${suffix}&scale=${scale}&rotate=0`;
-    console.log(`Downloading from: ${fullUrl}`);
+  if (endPage === -1) {
+    // Placeholder logic to determine total number of pages; actual implementation needed
+    endPage = await determineTotalPages(url);
+    console.log(`Determined end page: ${endPage}`);
+  }
 
-    try {
-      const imgData = await downloadImage(fullUrl);
-      images.push(imgData);
-      consecutiveFailures = 0; // Reset on successful download
-    } catch (error) {
-      console.log(`Failed to download page ${page}`);
-      consecutiveFailures += 1;
+  while (consecutiveFailures < maxConsecutiveFailures && page <= endPage) {
+    const batchTasks = [];
+    const batchLimit = batchSize === -1 ? endPage - startPage + 1 : batchSize;
+
+    for (let i = 0; i < batchLimit && page <= endPage; i++) {
+      const pageStr = String(page).padStart(4, "0");
+      const fullUrl = `${prefix}${pageStr}${suffix}&scale=${scale}&rotate=0`;
+      console.log(`Queueing download for: ${fullUrl}`);
+      batchTasks.push(
+        downloadImage(fullUrl)
+          .then((imgData) => ({ imgData, success: true }))
+          .catch(() => ({ imgData: null, success: false }))
+      );
+      page += 1;
     }
 
-    page += 1;
+    const results = await Promise.all(batchTasks);
+    for (const result of results) {
+      if (result.success) {
+        images.push(result.imgData);
+        consecutiveFailures = 0; // Reset on successful download
+      } else {
+        consecutiveFailures += 1;
+      }
+
+      if (consecutiveFailures >= maxConsecutiveFailures) {
+        console.log(
+          `Stopping due to ${maxConsecutiveFailures} consecutive failures.`
+        );
+        break;
+      }
+    }
   }
 
   if (images.length > 0) {
@@ -81,12 +102,13 @@ const downloadAndCreatePdf = async (
 
 // Parameters
 const startPage = 0;
-const endPage = 10; // Set to -1 to download all pages until consecutive failures occur
+const endPage = 438; // Set to -1 to download all pages until consecutive failures occur
 const maxConsecutiveFailures = 10; // Stop after 10 consecutive failures
 const url =
-  "https://ia902905.us.archive.org/BookReader/BookReaderImages.php?zip=/12/items/zenandtheartofmotorcyclemaintenancerobertpirsigm._833_V/Zen%20and%20the%20Art%20of%20Motorcycle%20Maintenance%20Robert%20Pirsig%20M._jp2.zip&file=Zen%20and%20the%20Art%20of%20Motorcycle%20Maintenance%20Robert%20Pirsig%20M._jp2/Zen%20and%20the%20Art%20of%20Motorcycle%20Maintenance%20Robert%20Pirsig%20M._0003.jp2&id=zenandtheartofmotorcyclemaintenancerobertpirsigm._833_V&scale=2&rotate=0";
-const filename = "Maintenance";
+  "https://ia903406.us.archive.org/BookReader/BookReaderImages.php?zip=/28/items/the-4-hour-work-week-by-timothy-ferriss/The%204-Hour%20Work%20Week%20by%20Timothy%20Ferriss_jp2.zip&file=The%204-Hour%20Work%20Week%20by%20Timothy%20Ferriss_jp2/The%204-Hour%20Work%20Week%20by%20Timothy%20Ferriss_0003.jp2&id=the-4-hour-work-week-by-timothy-ferriss&scale=2&rotate=0";
+const filename = "The_4-Hour_Work_Week_by_Timothy_Ferriss";
 const scale = 1; // Set the desired scale for higher resolution
+const batchSize = -1; // Number of pages to download in parallel per batch
 
 // Run the function
 downloadAndCreatePdf(
@@ -95,5 +117,6 @@ downloadAndCreatePdf(
   maxConsecutiveFailures,
   url,
   filename,
-  scale
+  scale,
+  batchSize
 );
