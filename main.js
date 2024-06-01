@@ -3,6 +3,7 @@ const fs = require("fs");
 const { PDFDocument } = require("pdf-lib");
 const sharp = require("sharp");
 const cliProgress = require("cli-progress");
+const { performance } = require("perf_hooks");
 
 const downloadImage = async (url) => {
   const response = await axios({
@@ -14,6 +15,7 @@ const downloadImage = async (url) => {
 
 const createPdf = async (images, filename) => {
   console.log("Saving images to PDF...");
+  const startTime = performance.now();
   const pdfDoc = await PDFDocument.create();
   for (let imgData of images) {
     const image = await sharp(imgData).jpeg().toBuffer();
@@ -28,7 +30,9 @@ const createPdf = async (images, filename) => {
   }
   const pdfBytes = await pdfDoc.save();
   fs.writeFileSync(`${filename}.pdf`, pdfBytes);
+  const endTime = performance.now();
   console.log(`PDF saved as ${filename}.pdf`);
+  return ((endTime - startTime) / 1000).toFixed(2); // Return the time taken to convert to PDF in seconds
 };
 
 const splitUrl = (url) => {
@@ -79,6 +83,9 @@ const downloadAndCreatePdf = async (
   );
 
   overallProgress.start(endPage - startPage + 1, 0);
+
+  const overallStartTime = performance.now();
+  const downloadStartTime = performance.now();
 
   while (consecutiveFailures < maxConsecutiveFailures && page <= endPage) {
     const batchTasks = [];
@@ -140,12 +147,22 @@ const downloadAndCreatePdf = async (
   }
 
   overallProgress.stop();
+  const downloadEndTime = performance.now();
+  const downloadDuration = (
+    (downloadEndTime - downloadStartTime) /
+    1000
+  ).toFixed(2);
 
-  if (images.length > 0) {
-    await createPdf(images, filename);
-  } else {
-    console.log("No images were downloaded.");
-  }
+  const pdfConversionTime = await createPdf(images, filename);
+
+  const overallEndTime = performance.now();
+  const overallDuration = ((overallEndTime - overallStartTime) / 1000).toFixed(
+    2
+  );
+
+  console.log(
+    `Total time taken: ${overallDuration} seconds (${downloadDuration} seconds downloading, ${pdfConversionTime} seconds converting).`
+  );
 };
 
 // Parameters
