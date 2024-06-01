@@ -33,7 +33,7 @@ const splitUrl = (url) => {
   const regex = /(.*_)(\d{4})(.*)/;
   const match = url.match(regex);
   if (match) {
-    return { prefix: match[1], suffix: match[3] };
+    return { prefix: match[1], suffix: match[3].replace(/&scale=\d+/, "") };
   } else {
     throw new Error("URL format is incorrect");
   }
@@ -44,7 +44,8 @@ const downloadAndCreatePdf = async (
   endPage,
   maxConsecutiveFailures,
   url,
-  filename
+  filename,
+  scale
 ) => {
   const { prefix, suffix } = splitUrl(url);
   const images = [];
@@ -56,7 +57,7 @@ const downloadAndCreatePdf = async (
     (endPage === -1 || page <= endPage)
   ) {
     const pageStr = String(page).padStart(4, "0");
-    const fullUrl = `${prefix}${pageStr}${suffix}`;
+    const fullUrl = `${prefix}${pageStr}${suffix}&scale=${scale}&rotate=0`;
     console.log(`Downloading from: ${fullUrl}`);
 
     try {
@@ -83,8 +84,16 @@ const startPage = 0;
 const endPage = 10; // Set to -1 to download all pages until consecutive failures occur
 const maxConsecutiveFailures = 10; // Stop after 10 consecutive failures
 const url =
-  "https://ia903406.us.archive.org/BookReader/BookReaderImages.php?zip=/28/items/the-4-hour-work-week-by-timothy-ferriss/The%204-Hour%20Work%20Week%20by%20Timothy%20Ferriss_jp2.zip&file=The%204-Hour%20Work%20Week%20by%20Timothy%20Ferriss_jp2/The%204-Hour%20Work%20Week%20by%20Timothy%20Ferriss_0020.jp2&id=the-4-hour-work-week-by-timothy-ferriss&scale=4&rotate=0";
-const filename = "10_page_test";
+  "https://ia902905.us.archive.org/BookReader/BookReaderImages.php?zip=/12/items/zenandtheartofmotorcyclemaintenancerobertpirsigm._833_V/Zen%20and%20the%20Art%20of%20Motorcycle%20Maintenance%20Robert%20Pirsig%20M._jp2.zip&file=Zen%20and%20the%20Art%20of%20Motorcycle%20Maintenance%20Robert%20Pirsig%20M._jp2/Zen%20and%20the%20Art%20of%20Motorcycle%20Maintenance%20Robert%20Pirsig%20M._0003.jp2&id=zenandtheartofmotorcyclemaintenancerobertpirsigm._833_V&scale=2&rotate=0";
+const filename = "Maintenance";
+const scale = 1; // Set the desired scale for higher resolution
 
 // Run the function
-downloadAndCreatePdf(startPage, endPage, maxConsecutiveFailures, url, filename);
+downloadAndCreatePdf(
+  startPage,
+  endPage,
+  maxConsecutiveFailures,
+  url,
+  filename,
+  scale
+);
