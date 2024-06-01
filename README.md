@@ -135,6 +135,22 @@ downloadAndCreatePdf(
 - Adjust the `maxConsecutiveFailures` parameter if you encounter frequent download errors.
 - Modify the `batchSize` if you experience issues with downloading many pages in parallel. A batch size of 32 is a good starting point, but you may need to adjust it based on your network speed and system performance.
 
+# Disclaimer
+
+This extension is provided for the convenience of users to download open-source and public domain books from archive.org. It is the responsibility of the user to ensure they have the legal right to download and use the content.
+
+The authors and contributors of this extension are not liable for any misuse of the tool or for any infringement of copyright or intellectual property laws. By using this extension, you agree to comply with the terms of service of archive.org and all applicable laws.
+
+# Terms of Use
+
+- Users must ensure that they have the legal right to access and download the content.
+- Users must comply with the terms of service of archive.org.
+- This extension should not be used to download copyrighted materials without permission.
+
+# Limitation of Liability
+
+The software is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages, or other liability, whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the software or the use or other dealings in the software.
+
 ## Contributing
 
 We welcome contributions to this project! If you have ideas or suggestions, please reach out to us via GitHub or Twitter. You can also fork the repository and create a new branch for your feature. Here are the steps to contribute:
