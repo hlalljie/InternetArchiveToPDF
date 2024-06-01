@@ -1,4 +1,4 @@
-const { downloadAndCreatePdf } = require("./pdf_convert.js");
+const { downloadAndCreatePdf } = require("./download_pdf.js");
 
 // Parameters
 const startPage = 0;
