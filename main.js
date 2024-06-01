@@ -29,14 +29,24 @@ const createPdf = async (images, filename) => {
   console.log(`PDF saved as ${filename}.pdf`);
 };
 
+const splitUrl = (url) => {
+  const regex = /(.*_)(\d{4})(.*)/;
+  const match = url.match(regex);
+  if (match) {
+    return { prefix: match[1], suffix: match[3] };
+  } else {
+    throw new Error("URL format is incorrect");
+  }
+};
+
 const downloadAndCreatePdf = async (
   startPage,
   endPage,
   maxConsecutiveFailures,
-  baseUrlPrefix,
-  urlSuffix,
+  url,
   filename
 ) => {
+  const { prefix, suffix } = splitUrl(url);
   const images = [];
   let consecutiveFailures = 0;
   let page = startPage;
@@ -46,11 +56,11 @@ const downloadAndCreatePdf = async (
     (endPage === -1 || page <= endPage)
   ) {
     const pageStr = String(page).padStart(4, "0");
-    const url = `${baseUrlPrefix}${pageStr}${urlSuffix}`;
-    console.log(`Downloading from: ${url}`);
+    const fullUrl = `${prefix}${pageStr}${suffix}`;
+    console.log(`Downloading from: ${fullUrl}`);
 
     try {
-      const imgData = await downloadImage(url);
+      const imgData = await downloadImage(fullUrl);
       images.push(imgData);
       consecutiveFailures = 0; // Reset on successful download
     } catch (error) {
@@ -72,22 +82,9 @@ const downloadAndCreatePdf = async (
 const startPage = 0;
 const endPage = 10; // Set to -1 to download all pages until consecutive failures occur
 const maxConsecutiveFailures = 10; // Stop after 10 consecutive failures
-// const baseUrlPrefix =
-//   "https://ia903406.us.archive.org/BookReader/BookReaderImages.php?zip=/28/items/the-4-hour-work-week-by-timothy-ferriss/The%204-Hour%20Work%20Week%20by%20Timothy%20Ferriss_jp2.zip&file=The%204-Hour%20Work%20Week%20by%20Timothy%20Ferriss_jp2/The%204-Hour%20Work%20Week%20by%20Timothy%20Ferriss_";
-// const urlSuffix =
-//   ".jp2&id=the-4-hour-work-week-by-timothy-ferriss&scale=4&rotate=0";
-const baseUrlPrefix =
-  "https://ia902905.us.archive.org/BookReader/BookReaderImages.php?zip=/12/items/zenandtheartofmotorcyclemaintenancerobertpirsigm._833_V/Zen%20and%20the%20Art%20of%20Motorcycle%20Maintenance%20Robert%20Pirsig%20M._jp2.zip&file=Zen%20and%20the%20Art%20of%20Motorcycle%20Maintenance%20Robert%20Pirsig%20M._jp2/Zen%20and%20the%20Art%20of%20Motorcycle%20Maintenance%20Robert%20Pirsig%20M._";
-const urlSuffix =
-  ".jp2&id=zenandtheartofmotorcyclemaintenancerobertpirsigm._833_V&scale=4&rotate=0";
-const filename = "Ten_Page_Test";
+const url =
+  "https://ia903406.us.archive.org/BookReader/BookReaderImages.php?zip=/28/items/the-4-hour-work-week-by-timothy-ferriss/The%204-Hour%20Work%20Week%20by%20Timothy%20Ferriss_jp2.zip&file=The%204-Hour%20Work%20Week%20by%20Timothy%20Ferriss_jp2/The%204-Hour%20Work%20Week%20by%20Timothy%20Ferriss_0020.jp2&id=the-4-hour-work-week-by-timothy-ferriss&scale=4&rotate=0";
+const filename = "10_page_test";
 
 // Run the function
-downloadAndCreatePdf(
-  startPage,
-  endPage,
-  maxConsecutiveFailures,
-  baseUrlPrefix,
-  urlSuffix,
-  filename
-);
+downloadAndCreatePdf(startPage, endPage, maxConsecutiveFailures, url, filename);
